@@ -18,7 +18,7 @@ import java.util.*;
  * output: per ogni anno, elenco delle città
  */
 
-public class SABDQuery1 {
+public class Query1 {
 
     private static String pathToFile = "dataset/weather_description.csv";
 
