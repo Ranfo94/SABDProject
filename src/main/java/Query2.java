@@ -19,6 +19,7 @@ import java.util.*;
 
 import static avro.shaded.com.google.common.collect.Iterables.getLast;
 import static avro.shaded.com.google.common.collect.Iterables.size;
+import static utils_project.Geolocalizer.process_city_location;
 
 public class Query2 {
 
@@ -240,7 +241,8 @@ public class Query2 {
      * STARTING FROM CITIES COORDS CREATE PAIR RDD WITH (CITY NAME,CITY OBJECT)
      *
      * */
-    private static HashMap<String, City> process_city_location(JavaRDD<String> cityData) throws IOException {
+
+    public static HashMap<String, City> process_city_location(JavaRDD<String> cityData) throws IOException {
         //todo: arraylist of cities;
 
         HashMap<String,City> countrymap = new HashMap<>();
