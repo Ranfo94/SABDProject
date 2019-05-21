@@ -4,6 +4,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import scala.Tuple2;
+import sparkSQL.MainQuerySQL3;
+import sparkSQL.MeasureSQL;
 import utils_project.Geolocalizer;
 import utils_project.Parser;
 import utils_project.Printer;
@@ -37,46 +39,6 @@ public class Query3 {
 
         ArrayList<String> cities = parser.findCities(pathToHumidityFile);
         ArrayList<String> countries = geolocalizer.findCountries(pathToCityFile);
-
-        /*****************
-        TEST
-        *****************/
-/*
-        JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
-
-        //elimino la prima riga del file
-        String firstRow = cityFile.first();
-        JavaRDD<String> cityRawData = cityFile.filter(x -> !x.equals(firstRow));
-
-        JavaRDD<String> cityData = cityRawData.flatMap(line -> {
-
-            ArrayList<String> result = new ArrayList<>();
-
-            //word contiene nome citta, lat e long
-            String[] word = line.split(",");
-
-            String country = new Geolocalizer().localize(word[1], word[2]);
-            String key = country;
-            /*
-            long lat = (long) Double.parseDouble(word[1]);
-            long lon = (long) Double.parseDouble(word[2]);
-
-            String country = new Geolocalizer().localize(word[1],word[2]);
-            int offset = TimeDateManager.getTimeZoneOffset(lat,lon);
-            City city = new City(word[0],country,lat,lon,offset);
-            */
-/*
-            result.add(key);
-            return result.iterator();
-        });
-        /*
-        List<String> listCity = cityData.collect();
-        printer.stampaCollezione(listCity);
-        //exit(0);
-*/
-        /****************
-         *
-         */
 
         ArrayList<String> temperatureFile = parser.filtraFile(pathToTemperatureFile);
         JavaRDD<String> temperature = sc.parallelize(temperatureFile);
@@ -191,7 +153,6 @@ public class Query3 {
          */
 
         JavaPairRDD<String, Double> tempDifference = yearlyAvgTemp.reduceByKey((x, y) -> x+y);
-
         JavaPairRDD<Double, String> reverseRdd = tempDifference.flatMapToPair(line -> {
             ArrayList<Tuple2<Double, String>> result = new ArrayList<>();
 
@@ -209,8 +170,6 @@ public class Query3 {
         //exit(0);
          */
 
-
-        //todo funzione che dinamicamente gestisce usa e israel
         ArrayList<String> distinctCountries = findDistinctCountries(countries);
         System.out.println(distinctCountries);
 
@@ -218,15 +177,20 @@ public class Query3 {
         for(i=0; i<distinctCountries.size(); ++i)
             findRanking(reverseRdd, distinctCountries.get(i));
  /*
+        //salvataggio in HDFS
         //caso 1: locale    caso 2: container
         //classifica2k17.saveAsTextFile("hdfs://localhost:9000/sabd/output");
         //classifica2k17.saveAsTextFile("hdfs://localhost:54310/simone/sabd/output_query3");
 
         //result.show();
   */
+        /*
         Writer writer = new Writer();
         writer.writeString(distinctCountries);
+         */
         //writer.writeRdd(reverseRdd);
+
+        new MainQuerySQL3().eseguiQuerySQL3(tempDifference, sc, countries);
         sc.close();
     }
 

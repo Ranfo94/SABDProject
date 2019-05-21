@@ -2,6 +2,7 @@ package utils_project;
 
 import scala.Tuple2;
 import scala.Tuple3;
+import scala.Tuple4;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -90,7 +91,7 @@ public class Printer {
     public static void stampaListaGiornaliera(List<Tuple2<String, Double>> list) {
         int i;
         for(i=0; i<list.size(); ++i) {
-            if(list.get(i)._1.contains("2016-05-13") && list.get(i)._1.contains("Beersheba"))
+            //if(list.get(i)._1.contains("2016-05-13") && list.get(i)._1.contains("Beersheba"))
                 System.out.println(list.get(i));
         }
         System.out.println("");
@@ -148,7 +149,7 @@ public class Printer {
     }
 
 
-    public static void stampaListaTripla(List<Tuple3<String, String, Double>> list){
+    public static void stampaListaQuadrupla(List<Tuple4<String, String, String, Double>> list){
         int i;
         for(i=0; i<list.size(); ++i)
             System.out.println(list.get(i));

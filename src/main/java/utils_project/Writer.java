@@ -13,6 +13,12 @@ import org.apache.spark.api.java.JavaPairRDD;
 
 public class Writer {
 
+    /**
+     * Funzione che scrive una stringa su hdfs
+     * @param file
+     * @throws IOException
+     * @throws URISyntaxException
+     */
     public void writeString(ArrayList<String> file) throws IOException, URISyntaxException {
 
         //1. Get the instance of Configuration
@@ -38,6 +44,12 @@ public class Writer {
     }
 
 
+    /**
+     * Funzione che scrive il valore di un rdd passato come parametro in hdfs
+     * @param rdd
+     * @throws IOException
+     * @throws URISyntaxException
+     */
     public void writeRdd(JavaPairRDD rdd) throws IOException, URISyntaxException {
 
         //1. Get the instance of Configuration
