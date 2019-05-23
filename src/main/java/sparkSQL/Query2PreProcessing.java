@@ -14,9 +14,13 @@ import java.util.*;
 
 public class Query2PreProcessing {
 
-    private static String pathToHumidityFile = "dataset/humidity.csv";
-    private static String pathToTemperatureFile = "dataset/temperature.csv";
-    private static String pathToPressureFile = "dataset/pressure.csv";
+    //   private static String pathToPressureFile = "dataset/pressure.csv";
+//    private static String pathToHumidityFile = "dataset/humidity.csv";
+//    private static String pathToTemperatureFile = "dataset/temperature.csv";
+
+    private static String pathToPressureFile = "cleaned_dataset/cleaned_pressure.csv";
+    private static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
+    private static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
 
     private static String pathToCityFile = "dataset/city_attributes.csv";
 

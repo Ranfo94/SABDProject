@@ -88,8 +88,6 @@ public class Query1 {
                 Iterable<String> description = stringIterableTuple2._2;
                 int res;
 
-//TODO RIVEDERE LA LOGICA DI DECISIONE!
-
                 int i=0;
                 for(String s : description){
                     if(s.contains("sky is clear")){
@@ -102,7 +100,8 @@ public class Query1 {
                 }
 
                 int len = Iterables.size(description);
-                //60% sky is clear
+
+                //decision logic: day is sunny if 60% sky is clear
                 int max_percentage = 60*len/100;
 
                 if (i==0){
@@ -146,6 +145,7 @@ public class Query1 {
         //cities whose number of months with over 15 sunny days are filtered
         JavaPairRDD<String,Integer> filteredMonthsCount = monthsCount.filter(x -> x._2 ==3);
 
+        //FINAL RESULT
         //pairs grouped by city + cut duplicates + grouped by key -> (year, [array of cities])
         JavaPairRDD<String,Iterable<String>> pairsCityYear = filteredMonthsCount.mapToPair(new PairFunction<Tuple2<String, Integer>, String, String>() {
             @Override

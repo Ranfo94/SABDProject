@@ -6,7 +6,15 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 
 import java.io.IOException;
-import java.util.List;
+
+/**
+ * Query: Per ogni anno del dataset
+ * individuare le citta` che hanno almeno 15 giorni al mese di tempo sereno nei mesi di marzo, aprile e maggio.
+ *
+ * file: weather_description.csv
+ *
+ * output: per ogni anno, elenco delle città
+ */
 
 public class MainQuerySQL1 {
 

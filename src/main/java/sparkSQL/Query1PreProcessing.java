@@ -33,8 +33,10 @@ public class Query1PreProcessing {
 
         JavaRDD<String> descriptionData = descriptionFile.filter(x -> !x.equals(firstRow));
 
+        //filter out unnecessary months
         JavaRDD<String> dataFilteredByMonth = descriptionData.filter(x -> getMonth(x).equals("03") || getMonth(x).equals("04") || getMonth(x).equals("05"));
 
+        //pairs of (key, weather description)
         JavaPairRDD<String,WeatherDescriptionSQL> weatherDescrJavaRDD = dataFilteredByMonth.flatMapToPair(new PairFlatMapFunction<String, String, WeatherDescriptionSQL>() {
             @Override
             public Iterator<Tuple2<String, WeatherDescriptionSQL>> call(String s) throws Exception {
@@ -74,7 +76,6 @@ public class Query1PreProcessing {
             }
 
         });
-
 
         return weatherDescrJavaRDD;
     }

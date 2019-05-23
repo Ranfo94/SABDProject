@@ -22,7 +22,9 @@ import static java.lang.System.exit;
 public class Query3 {
 
     public static String pathToHumidityFile = "dataset/humidity.csv";
+
     public static String pathToTemperatureFile = "dataset/temperature.csv";
+
     private static String pathToCityFile = "dataset/city_attributes.csv";
 
 

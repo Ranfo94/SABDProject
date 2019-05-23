@@ -27,47 +27,48 @@ public class QuerySQL1 {
                 .getOrCreate();
 
 
-
         Dataset<Row> rows = createSchemaFromData(spark,values);
 
         rows.createOrReplaceTempView("descr");
 
-        //sum sunny hours per day
+        //sum of sunny hours per day
         //result: year | city | month | day | count of sunny hours
         String queryCount = "SELECT year, city, month, day, SUM(sunny) AS sunny FROM descr GROUP BY year,city,month,day";
         Dataset<Row> sunnyHoursPerDayCount = spark.sql(queryCount);
         sunnyHoursPerDayCount.createOrReplaceTempView("descr");
 
-        // where sunny > 12
+        // select where sunny hours per day > 12
         //result: year | city | month | day
         String queryMonth = "SELECT year, city, month, day FROM descr WHERE sunny > 14 ";
         Dataset<Row> sunnyDaysPerMonth = spark.sql(queryMonth);
         sunnyDaysPerMonth.createOrReplaceTempView("descr");
 
+        //count of sunny days per month
         //result: year | city | month | count of sunny days
         String queryCountDays = "SELECT year, city, month, count(*) AS count FROM descr GROUP BY year,city, month";
         Dataset<Row> sunnyDaysCount = spark.sql(queryCountDays);
         sunnyDaysCount.createOrReplaceTempView("descr");
 
-        //where count of days >14
+        //select where count of sunny days per month > 14
         //result: year | city | month
+        //months with more than 14 sunny days
         String querySunnyMonths = "SELECT year, city, month FROM descr WHERE count > 14";
         Dataset<Row> sunnyMonths = spark.sql(querySunnyMonths);
         sunnyMonths.createOrReplaceTempView("descr");
 
-        //count months
+        //count number of months with at least 15 sunny days
         //result: year | city | month count
         String queryCountSunnyMonths = "SELECT year, city, count(*) AS count FROM descr GROUP BY year, city ";
         Dataset<Row> sunnyMonthsCount = spark.sql(queryCountSunnyMonths);
         sunnyMonthsCount.createOrReplaceTempView("descr");
 
-        //where count months =3
+        //select where count of months with at least 15 sunny days = 3
         //result: year | city
         String queryCitiesYears = "SELECT year, city FROM descr WHERE count =3";
         Dataset<Row> citiesYears = spark.sql(queryCitiesYears);
         citiesYears.createOrReplaceTempView("descr");
 
-        //orderedbyyear
+        //result ordered by year
         String orderedCitiesYear = "SELECT * FROM descr ORDER BY year ASC";
         Dataset<Row> orderedCitiesYears = spark.sql(orderedCitiesYear);
         orderedCitiesYears.createOrReplaceTempView("descr");

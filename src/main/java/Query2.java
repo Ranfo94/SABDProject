@@ -19,13 +19,17 @@ import java.util.*;
 
 import static avro.shaded.com.google.common.collect.Iterables.getLast;
 import static avro.shaded.com.google.common.collect.Iterables.size;
-import static utils_project.Geolocalizer.process_city_location;
 
 public class Query2 {
 
-    private static String pathToPressureFile = "dataset/pressure.csv";
-    private static String pathToHumidityFile = "dataset/humidity.csv";
-    private static String pathToTemperatureFile = "dataset/temperature.csv";
+ //   private static String pathToPressureFile = "dataset/pressure.csv";
+//    private static String pathToHumidityFile = "dataset/humidity.csv";
+//    private static String pathToTemperatureFile = "dataset/temperature.csv";
+
+    private static String pathToPressureFile = "cleaned_dataset/cleaned_pressure.csv";
+    private static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
+    private static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
+
     private static String pathToCityFile = "dataset/city_attributes.csv";
 
     public static void main(String[] args) throws IOException {
@@ -40,7 +44,7 @@ public class Query2 {
         long startTime = System.nanoTime();
 
         JavaRDD<String> rawData = sc.textFile(pathToCityFile);
-        HashMap<String, City> city_countries = process_city_location(rawData);
+        HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
 
         //get humidity data
         JavaRDD<String> humidityRawData = sc.textFile(pathToHumidityFile);
@@ -58,6 +62,9 @@ public class Query2 {
         JavaRDD<String> pressureData = pressureRawData.filter(x -> !x.equals(firstRow));
         JavaRDD<String> temperatureData = temperatureRawData.filter(x -> !x.equals(firstRow));
 
+        /**
+         * output: pairs(key: country_year_month_day, [measure, measure, ...])
+         */
         JavaPairRDD<String, Iterable<Measure>> humidityByCountryDate = humidityData.flatMapToPair(new PairFlatMapFunction<String, String, Measure>() {
             @Override
             public Iterator<Tuple2<String, Measure>> call(String line) throws Exception {
@@ -89,7 +96,7 @@ public class Query2 {
                     //key: country_year_month_day
                     String key = city_countries.get(cities[j]).getCountry()+"_"+ new_date[0]+"_"+new_date[1]+"_"+new_date[2];
 
-                    Measure m = new Measure(Double.parseDouble(humidityValues[j]),"humidity",""+hour);
+                    Measure m = new Measure(Double.parseDouble(humidityValues[j]),"humidity",""+new_hour);
                     results.add(new Tuple2<>(key,m));
 
                 }
@@ -133,7 +140,7 @@ public class Query2 {
                     //key: country_year_month_day
                     String key = city_countries.get(cities[j]).getCountry()+"_"+ new_date[0]+"_"+new_date[1]+"_"+new_date[2];
 
-                    Measure m = new Measure(Double.parseDouble(temperatureValues[j]),"temperature",""+hour);
+                    Measure m = new Measure(Double.parseDouble(temperatureValues[j]),"temperature",""+new_hour);
                     results.add(new Tuple2<>(key,m));
                 }
 
@@ -188,9 +195,9 @@ public class Query2 {
          * in questa funzione aggiusto i dati mancanti e aggrego per country_year_month
          * output= (country_year_month, ArrayList[measures...])
          */
-        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyHumidityMeasuresByYearCountry = humidityByCountryDate.mapToPair(new collectAndFixData()).groupByKey();
-        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyPressureMeasuresByYearCountry = pressureByCountryDate.mapToPair(new collectAndFixData()).groupByKey();
-        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyTemperatureMeasuresByYearCountry = temperatureByCountryDate.mapToPair(new collectAndFixData()).groupByKey();
+        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyHumidityMeasuresByYearCountry = humidityByCountryDate.mapToPair(new collectMeasures()).groupByKey();
+        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyPressureMeasuresByYearCountry = pressureByCountryDate.mapToPair(new collectMeasures()).groupByKey();
+        JavaPairRDD<String, Iterable<ArrayList<Measure>>> dailyTemperatureMeasuresByYearCountry = temperatureByCountryDate.mapToPair(new collectMeasures()).groupByKey();
 
         /**
          * input: (country_year_month, [measures..])
@@ -236,42 +243,15 @@ public class Query2 {
         return finalResult;
     }
 
-    /*
-     *
-     * STARTING FROM CITIES COORDS CREATE PAIR RDD WITH (CITY NAME,CITY OBJECT)
-     *
-     * */
-
-    public static HashMap<String, City> process_city_location(JavaRDD<String> cityData) throws IOException {
-        //todo: arraylist of cities;
-
-        HashMap<String,City> countrymap = new HashMap<>();
-        String firstRow = cityData.first();
-        JavaRDD<String> withoutfirst = cityData.filter(x -> !x.equals(firstRow));
-
-        for (String line : withoutfirst.collect()){
-            String[] splittedLine = line.split(",");
-            long lat = (long) Double.parseDouble(splittedLine[1]);
-            long lon = (long) Double.parseDouble(splittedLine[2]);
-
-            String country = new Geolocalizer().localize(splittedLine[1],splittedLine[2]);
-            int offset = TimeDateManager.getTimeZoneOffset(lat,lon);
-            City city = new City(splittedLine[0],country,lat,lon,offset);
-            countrymap.put(splittedLine[0],city);
-        }
-        return countrymap;
-    }
-
 
     /**
      * fix data + change key
      * output (country_year_month, [measures ...])
      */
-    private static class collectAndFixData implements PairFunction<Tuple2<String,Iterable<Measure>>,String,ArrayList<Measure>> {
+    private static class collectMeasures implements PairFunction<Tuple2<String,Iterable<Measure>>,String,ArrayList<Measure>> {
 
         @Override
         public Tuple2<String, ArrayList<Measure>> call(Tuple2<String, Iterable<Measure>> stringArrayListTuple2) throws Exception {
-            //todo: fix data
 
             String[] key = stringArrayListTuple2._1.split("_");
             String new_key = key[0]+"_"+key[1]+"_"+key[2];
