@@ -30,6 +30,7 @@ public class prova {
 /*
         Reader reader = new Reader();
         reader.readFromHdfs();
- */
+*/
+        new Query4().query3new();
     }
 }

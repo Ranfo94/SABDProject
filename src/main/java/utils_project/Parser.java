@@ -78,4 +78,35 @@ public class Parser {
         }
         return file;
     }
+
+
+    /**
+     * Cerca le singole nazioni presenti nella lista di città
+     * @param countries
+     * @return
+     */
+    public static ArrayList<String> findDistinctCountries(ArrayList<String> countries){
+        ArrayList<String> result = new ArrayList<>();
+
+        int i;
+        for(i=0; i<countries.size(); ++i){
+            if(!result.contains(countries.get(i)))
+                result.add(countries.get(i));
+        }
+        return result;
+    }
+
+
+    public static Integer findCountryIndex(String country, ArrayList<String> distinctCountries) {
+        boolean trovato = false;
+        int i;
+        Integer index = null;
+        for(i=0; i<distinctCountries.size() && trovato==false; ++i){
+            if(distinctCountries.get(i).equals(country)) {
+                trovato = true;
+                index = i;
+            }
+        }
+        return index;
+    }
 }
