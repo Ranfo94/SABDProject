@@ -25,12 +25,17 @@ public class MainQuerySQL1 {
                 .config("spark.some.config.option", "some-value")
                 .getOrCreate();
 
+        long startTime = System.nanoTime();
 
-        JavaPairRDD<String,Iterable<Integer>> processedData =Query1PreProcessing.preprocessData(sc);
+        JavaPairRDD<String,WeatherDescriptionSQL> processedData =Query1PreProcessing.preprocessData(sc);
+        QuerySQL1.process(processedData);
 
-        List<String> yearList = Query1PreProcessing.getYearList(processedData);
+        long endTime = System.nanoTime();
+        long timeElapsed = endTime - startTime;
 
-        Query1SQL.process(processedData,yearList);
+        System.out.println("Time Elapsed (nanoseconds) : "+timeElapsed);
+        System.out.println("Time Elapsed (milliseconds) : "+timeElapsed/1000000);
+
         spark.close();
         sc.close();
     }

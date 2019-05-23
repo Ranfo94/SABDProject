@@ -20,12 +20,12 @@ public class Query1PreProcessing {
     private static String pathToDescriptionFile = "dataset/weather_description.csv";
     private static String pathToCityFile = "dataset/city_attributes.csv";
 
-    public static JavaPairRDD<String,Iterable<Integer>> preprocessData(JavaSparkContext sc) throws IOException {
+    public static JavaPairRDD<String,WeatherDescriptionSQL> preprocessData(JavaSparkContext sc) throws IOException {
 
         JavaRDD<String> descriptionFile = sc.textFile(pathToDescriptionFile);
 
         JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
-        HashMap<String, City> city_countries = process_city_location(cityFile);
+        HashMap<String, City> city_countries = Geolocalizer.process_city_location(cityFile);
 
         String firstRow = descriptionFile.first();
         String[] splittedRow = firstRow.split(",");
@@ -75,78 +75,14 @@ public class Query1PreProcessing {
 
         });
 
-        //(city_day_month_year, [descr ... ]
-        JavaPairRDD<String,Iterable<WeatherDescriptionSQL>> wdGroupedByDay = weatherDescrJavaRDD.groupByKey();
 
-        //(city_month_year, 1/0)
-        JavaPairRDD<String, Integer> filteredDaysGroupedByDay = wdGroupedByDay.mapToPair(new PairFunction<Tuple2<String, Iterable<WeatherDescriptionSQL>>, String, Integer>() {
-            @Override
-            public Tuple2<String, Integer> call(Tuple2<String, Iterable<WeatherDescriptionSQL>> stringIterableTuple2) throws Exception {
-
-                int sunny =0;
-
-                for(WeatherDescriptionSQL wd : stringIterableTuple2._2){
-
-                    if(wd.getDescription().contains("sky is clear")){
-                        sunny++;
-                    }
-
-                }
-                int res =0;
-                if(sunny >= size(stringIterableTuple2._2)*60/100){
-                    res =1;
-                }
-                String[] old_key = stringIterableTuple2._1.split("_");
-
-                //city_month_year
-                String new_key= old_key[0]+"_"+old_key[2]+"_"+old_key[3];
-
-                return new Tuple2<>(new_key,res);
-            }
-        });
-
-        //(city_month_year, [1,0, ...]
-        JavaPairRDD<String,Iterable<Integer>> filteredDaysByMonth = filteredDaysGroupedByDay.groupByKey();
-
-        return filteredDaysByMonth;
+        return weatherDescrJavaRDD;
     }
 
-    private static HashMap<String, City> process_city_location(JavaRDD<String> cityData) throws IOException {
-        //todo: arraylist of cities;
-
-        HashMap<String,City> countrymap = new HashMap<>();
-        String firstRow = cityData.first();
-        JavaRDD<String> withoutfirst = cityData.filter(x -> !x.equals(firstRow));
-
-        for (String line : withoutfirst.collect()){
-            String[] splittedLine = line.split(",");
-            long lat = (long) Double.parseDouble(splittedLine[1]);
-            long lon = (long) Double.parseDouble(splittedLine[2]);
-
-            String country = new Geolocalizer().localize(splittedLine[1],splittedLine[2]);
-            int offset = TimeDateManager.getTimeZoneOffset(lat,lon);
-            City city = new City(splittedLine[0],country,lat,lon,offset);
-            countrymap.put(splittedLine[0],city);
-        }
-        return countrymap;
-    }
 
     private static String getMonth(String s) {
 
         String date = s.substring(5,7);
         return date;
-    }
-
-    public static List<String> getYearList(JavaPairRDD<String,Iterable<Integer>> rdd){
-        Map<String,Iterable<Integer>> mappedData = rdd.collectAsMap();
-        List<String> yearList = new ArrayList<>();
-
-        for(String k : mappedData.keySet()){
-            String year = k.split("_")[2];
-            if(yearList.contains(year)==false){
-                yearList.add(year);
-            }
-        }
-        return yearList;
     }
 }
