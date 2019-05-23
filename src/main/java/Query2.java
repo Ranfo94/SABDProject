@@ -26,9 +26,9 @@ public class Query2 {
 //    private static String pathToHumidityFile = "dataset/humidity.csv";
 //    private static String pathToTemperatureFile = "dataset/temperature.csv";
 
-    private static String pathToPressureFile = "cleaned_dataset/cleaned_pressure.csv";
-    private static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
-    private static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
+    public static String pathToPressureFile = "cleaned_dataset/cleaned_pressure.csv";
+    public static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
+    public static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
 
     private static String pathToCityFile = "dataset/city_attributes.csv";
 
@@ -94,7 +94,9 @@ public class Query2 {
                    String new_hour = TimeDateManager.getTimeZoneTime(hour,offset)+"";
 
                     //key: country_year_month_day
-                    String key = city_countries.get(cities[j]).getCountry()+"_"+ new_date[0]+"_"+new_date[1]+"_"+new_date[2];
+                    String key = city_countries.get(cities[j]).getCountry()+"_"+ new_date[0] +"_"+ new_date[1] +"_"+new_date[2];
+
+
 
                     Measure m = new Measure(Double.parseDouble(humidityValues[j]),"humidity",""+new_hour);
                     results.add(new Tuple2<>(key,m));
@@ -278,11 +280,6 @@ public class Query2 {
             //country_year
             String new_key = key[0]+"_"+key[1];
 
-            double max= 0.0;
-            double min =0.0;
-            double mean= 0.0;
-            double std = 0.0;
-
             Iterable<ArrayList<Measure>> measures = stringIterableTuple2._2;
 
             ArrayList<Measure> measuresList = new ArrayList<>();
@@ -292,33 +289,41 @@ public class Query2 {
             }
 
             int len = size(measures);
+
             String type = measuresList.get(0).getType();
 
-            for(Measure m : measuresList){
-
-                if(m.getMeasure() < min){
-                    min = m.getMeasure();
-                }
-                if(m.getMeasure() > max){
-                    max = m.getMeasure();
-                }
-                mean += m.getMeasure();
-
-            }
-
-            mean = mean/len;
+            List<Double> valuesList = new ArrayList<>();
 
             for(Measure m : measuresList){
-
-                std = Math.pow(m.getMeasure() - mean,2);
-
+                valuesList.add(m.getMeasure());
             }
 
-            std = Math.sqrt(std/len);
+            Collections.sort(valuesList);
+            double max = valuesList.get(valuesList.size() - 1);
+            double min = valuesList.get(0);
+            double mean = getMean(valuesList);
+            double std = getSTD(valuesList, mean);
 
             Stats newStats = new Stats(min,max,mean,std,key[0],key[1],key[2],type);
 
             return new Tuple2<>(new_key,newStats);
+        }
+
+        private double getSTD(List<Double> valuesList, double mean) {
+            int sum = 0;
+
+            for (Double i : valuesList)
+                sum +=Math.pow((i - mean), 2);
+            return Math.sqrt( sum / ( valuesList.size() - 1 ) );
+        }
+
+        private double getMean(List<Double> valuesList) {
+
+            double m = 0.0;
+            for(Double d : valuesList){
+                m += d;
+            }
+            return m/size(valuesList);
         }
     }
 

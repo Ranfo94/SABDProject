@@ -13,8 +13,11 @@ import static utils_project.Parser.findCountryIndex;
 
 public class utilsForQuery3 {
 
-    public static String pathToHumidityFile = "dataset/humidity.csv";
-    public static String pathToTemperatureFile = "dataset/temperature.csv";
+//    public static String pathToHumidityFile = "dataset/humidity.csv";
+  //  public static String pathToTemperatureFile = "dataset/temperature.csv";
+
+    private static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
+    private static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
 
     //todo acquisire temperature file da hdfs
     public static JavaPairRDD<String, Double> calcolaRdd(ArrayList<String> countries,

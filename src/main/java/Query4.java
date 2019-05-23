@@ -23,6 +23,9 @@ import static utils_project.utilsForQuery3.*;
 
 public class Query4 {
 
+    private static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
+    private static String pathToTemperatureFile = "cleaned_dataset/cleaned_temperature.csv";
+
     public static String pathToCityFile = "dataset/city_attributes.csv";
 
     public static void main(String[] args) throws IOException, URISyntaxException {
@@ -280,7 +283,7 @@ public class Query4 {
         }
     }
 
-    public static void query3new(){
+    public static void query3new() throws IOException {
 
         SparkConf conf = new SparkConf()
                 .setMaster("local")
@@ -414,7 +417,7 @@ public class Query4 {
          */
         //writer.writeRdd(reverseRdd);
 
-        //new MainQuerySQL3().eseguiQuerySQL3(tempDifference, sc, distinctCountries);
+        new MainQuerySQL3().eseguiQuerySQL3(tempDifference, sc, distinctCountries);
         sc.close();
     }
 }
