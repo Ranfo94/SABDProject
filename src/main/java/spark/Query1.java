@@ -1,3 +1,5 @@
+package spark;
+
 import com.google.common.collect.Iterables;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -30,6 +32,8 @@ public class Query1 {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("ERROR");
+
+        //TODO: GET FILE FROM HDFS
 
         JavaRDD<String> file = sc.textFile(pathToFile);
 
@@ -160,7 +164,7 @@ public class Query1 {
             }
         }).distinct().groupByKey();
 
-
+        //TODO : SALVA RESULT SU HDFS
         //result is printed
         Map<String,Iterable<String>> mapResults = pairsCityYear.collectAsMap();
         for(String year : mapResults.keySet()){

@@ -34,6 +34,8 @@ public class Query2PreProcessing {
 
     public static List<JavaPairRDD<String, MeasureSQL>> preprocessData(JavaSparkContext sc, HashMap<String,City>city_countries) throws IOException {
 
+        //TODO: GET FILE FROM HDFS
+
         JavaRDD<String> temperatureFile = sc.textFile(pathToTemperatureFile);
         JavaRDD<String> humidityFile = sc.textFile(pathToHumidityFile);
         JavaRDD<String> pressureFile = sc.textFile(pathToPressureFile);

@@ -22,6 +22,8 @@ public class Query1PreProcessing {
 
         JavaRDD<String> descriptionFile = sc.textFile(pathToDescriptionFile);
 
+        //TODO: GET FILE FROM HDFS
+
         JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(cityFile);
 

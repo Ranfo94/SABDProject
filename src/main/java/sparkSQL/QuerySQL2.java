@@ -54,6 +54,8 @@ public class QuerySQL2 {
         System.out.println("TEMPERATURE\n");
         sortedTempRes.show();
 
+        //TODO: INVIA RISULTATO SU HDFS. FILE: sortedTempRes
+
 
         /**
          * HUMIDITY
@@ -72,6 +74,8 @@ public class QuerySQL2 {
         System.out.println("HUMIDITY\n");
         sortedHumRes.show();
 
+        //TODO: INVIA RISULTATO SU HDFS. FILE: sortedHumRes
+
         /**
          * PRESSURE
          */
@@ -88,6 +92,8 @@ public class QuerySQL2 {
 
         System.out.println("PRESSURE\n");
         sortedPressRes.show();
+
+        //TODO: INVIA RISULTATO SU HDFS. FILE: SORTEDPRESSRESS
 
     }
 

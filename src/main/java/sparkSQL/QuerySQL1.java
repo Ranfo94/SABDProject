@@ -74,6 +74,8 @@ public class QuerySQL1 {
         Dataset<Row> orderedCitiesYears = spark.sql(orderedCitiesYear);
         orderedCitiesYears.createOrReplaceTempView("descr");
 
+        //TODO: INVIA RISULTATO SU HDFS. FILE: ORDEREDCITIESYEARS
+
         orderedCitiesYears.show();
 
     }

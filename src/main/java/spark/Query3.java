@@ -1,3 +1,4 @@
+package spark;
 
 import entities.City;
 import entities.CityDiff;
@@ -20,10 +21,7 @@ import static avro.shaded.com.google.common.collect.Iterables.size;
 public class Query3 {
 
     private static String pathToTempFile = "cleaned_dataset/cleaned_temperature.csv";
-    private static String pathToCityFile = "data/city_attributes.csv";
-
-    public Query3() {
-    }
+    private static String pathToCityFile = "dataset/city_attributes.csv";
 
     public static void main(String[] args) throws IOException {
 
@@ -33,6 +31,10 @@ public class Query3 {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("ERROR");
+
+        long startTime = System.nanoTime();
+
+        //TODO: GET FILE FROM HDFS
 
         JavaRDD<String> rawData = sc.textFile(pathToCityFile);
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
@@ -122,12 +124,22 @@ public class Query3 {
         Map<String,Iterable<CityDiff>> map2k17 = rdd2k17Diff.collectAsMap();
         Map<String,Iterable<CityDiff>> map2k16 = rdd2k16Diff.collectAsMap();
 
+        long endTime = System.nanoTime();
+
         for(String k : map2k17.keySet()){
 
             List<Tuple2<String, Integer>> res = getResultByNation(map2k17.get(k), map2k16.get(k));
+            //TODO: SAVE FILE
             System.out.println(res);
 
         }
+
+        System.out.println("\n****\n");
+
+        long timeElapsed = endTime - startTime;
+
+        System.out.println("Time Elapsed (nanoseconds) : " + timeElapsed);
+        System.out.println("Time Elapsed (milliseconds) : " + timeElapsed / 1000000);
 
     }
 

@@ -28,7 +28,7 @@ import java.util.List;
 public class ProvaMainQuerySQL3 {
 
     private static String pathToTempFile = "cleaned_dataset/cleaned_temperature.csv";
-    private static String pathToCityFile = "data/city_attributes.csv";
+    private static String pathToCityFile = "dataset/city_attributes.csv";
 
     public static void main(String[] args) throws IOException {
         SparkConf conf = new SparkConf()
@@ -37,6 +37,10 @@ public class ProvaMainQuerySQL3 {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("ERROR");
+
+        long startTime = System.nanoTime();
+
+        //TODO GET FILE FROM HDFS
 
         JavaRDD<String> rawData = sc.textFile(pathToCityFile);
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
@@ -203,6 +207,17 @@ public class ProvaMainQuerySQL3 {
 
         String queryJoinIsrael= "SELECT israelthree2k17.country, israelthree2k17.row AS row_2017, israelthree2k17.city, israel2k16.row AS row_2016 FROM israelthree2k17 LEFT JOIN israel2k16 ON israelthree2k17.city=israel2k16.city";
         Dataset<Row> israel = spark.sql(queryJoinIsrael);
+
+        //TODO:SAVE SU HDFS usa E israel
+
+        long endTime = System.nanoTime();
+
+        System.out.println("\n****\n");
+
+        long timeElapsed = endTime - startTime;
+
+        System.out.println("Time Elapsed (nanoseconds) : " + timeElapsed);
+        System.out.println("Time Elapsed (milliseconds) : " + timeElapsed / 1000000);
 
         sc.stop();
     }

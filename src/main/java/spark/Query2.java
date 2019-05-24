@@ -1,3 +1,5 @@
+package spark;
+
 import entities.City;
 import entities.Measure;
 import entities.Stats;
@@ -45,6 +47,8 @@ public class Query2 {
         sc.setLogLevel("ERROR");
 
         long startTime = System.nanoTime();
+
+        //TODO : GET FILES FROM HDFS
 
         JavaRDD<String> rawData = sc.textFile(pathToCityFile);
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
@@ -226,6 +230,7 @@ public class Query2 {
         /**
          * funzione che aggrega i dati in classe Country Stats
          */
+        //TODO: SALVA RESULT SU HDFS
         List<CountryStats> finalResult = collectDataByCountry(yearlyHumidityStatsByCountry,yearlyPressureStatsByCountry,yearlyTemperatureStatsByCountry);
 
         sc.stop();
