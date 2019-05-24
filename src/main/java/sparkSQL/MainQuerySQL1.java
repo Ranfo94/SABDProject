@@ -1,5 +1,6 @@
 package sparkSQL;
 
+import entities.WeatherDescriptionSQL;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -35,7 +36,7 @@ public class MainQuerySQL1 {
 
         long startTime = System.nanoTime();
 
-        JavaPairRDD<String,WeatherDescriptionSQL> processedData =Query1PreProcessing.preprocessData(sc);
+        JavaPairRDD<String, WeatherDescriptionSQL> processedData =Query1PreProcessing.preprocessData(sc);
         QuerySQL1.process(processedData);
 
         long endTime = System.nanoTime();

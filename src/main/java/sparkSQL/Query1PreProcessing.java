@@ -1,11 +1,11 @@
 package sparkSQL;
 
 import entities.City;
+import entities.WeatherDescriptionSQL;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
-import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 import utils_project.Geolocalizer;
 import utils_project.TimeDateManager;
@@ -13,14 +13,12 @@ import utils_project.TimeDateManager;
 import java.io.IOException;
 import java.util.*;
 
-import static avro.shaded.com.google.common.collect.Iterables.size;
-
 public class Query1PreProcessing {
 
     private static String pathToDescriptionFile = "dataset/weather_description.csv";
     private static String pathToCityFile = "dataset/city_attributes.csv";
 
-    public static JavaPairRDD<String,WeatherDescriptionSQL> preprocessData(JavaSparkContext sc) throws IOException {
+    public static JavaPairRDD<String, WeatherDescriptionSQL> preprocessData(JavaSparkContext sc) throws IOException {
 
         JavaRDD<String> descriptionFile = sc.textFile(pathToDescriptionFile);
 

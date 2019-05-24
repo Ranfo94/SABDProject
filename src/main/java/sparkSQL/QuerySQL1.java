@@ -1,5 +1,6 @@
 package sparkSQL;
 
+import entities.WeatherDescriptionSQL;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class QuerySQL1 {
 
-    public static void process (JavaPairRDD<String,WeatherDescriptionSQL> values) {
+    public static void process (JavaPairRDD<String, WeatherDescriptionSQL> values) {
 
         SparkSession spark = SparkSession
                 .builder()

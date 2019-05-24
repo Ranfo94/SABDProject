@@ -1,283 +1,238 @@
+
+import entities.City;
+import entities.CityDiff;
+import entities.MeasureSQLQuery3;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
-import sparkSQL.MainQuerySQL3;
-import sparkSQL.MeasureSQL;
 import utils_project.Geolocalizer;
-import utils_project.Parser;
-import utils_project.Printer;
-import utils_project.Writer;
+import utils_project.TimeDateManager;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import static java.lang.System.exit;
-
+import static avro.shaded.com.google.common.collect.Iterables.size;
 
 public class Query3 {
 
-    public static String pathToHumidityFile = "dataset/humidity.csv";
+    private static String pathToTempFile = "cleaned_dataset/cleaned_temperature.csv";
+    private static String pathToCityFile = "data/city_attributes.csv";
 
-    public static String pathToTemperatureFile = "dataset/temperature.csv";
+    public Query3() {
+    }
 
-    private static String pathToCityFile = "dataset/city_attributes.csv";
-
-
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) throws IOException {
 
         SparkConf conf = new SparkConf()
                 .setMaster("local")
-                .setAppName("query 3");
+                .setAppName("Inverted index");
+
         JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("ERROR");
 
+        JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
 
+        //get temp data
+        JavaRDD<String> tempRawData = sc.textFile(pathToTempFile);
 
-        //TEST
-        JavaRDD<String> rawData = sc.textFile("hdfs://localhost:54310/simone/sabd/file.csv");
-        List<String> result2 = rawData.collect();
-        int h;
-        for(h=0; h<result2.size(); ++h)
-            System.out.println(result2.get(h));
-        exit(0);
+        //cities
+        String firstRow = tempRawData.first();
+        String[] cities = firstRow.split(",");
 
+        JavaRDD<String> tempData = tempRawData.filter(x-> !x.equals(firstRow));
 
+        JavaPairRDD<String, MeasureSQLQuery3> pairsKeyMeasure = tempData.flatMapToPair(new PairFlatMapFunction<String, String, MeasureSQLQuery3>() {
+            @Override
+            public Iterator<Tuple2<String, MeasureSQLQuery3>> call(String line) throws Exception {
 
+                List<Tuple2<String, MeasureSQLQuery3>> results = new ArrayList<>();
 
-        Parser parser = new Parser();
-        Printer printer = new Printer();
-        Geolocalizer geolocalizer = new Geolocalizer();
+                String[] tempValues = line.split(",");
 
-        ArrayList<String> cities = parser.findCities(pathToHumidityFile);
-        ArrayList<String> countries = geolocalizer.findCountries(pathToCityFile);
+                for (int i = 1; i < tempValues.length; i++) {
 
-        ArrayList<String> temperatureFile = parser.filtraFile(pathToTemperatureFile);
-        JavaRDD<String> temperature = sc.parallelize(temperatureFile);
+                    if(tempValues[i].equals("")||tempValues[i].equals(" ")){
+                        continue;
+                    }
 
-        //ricavo gli rdd relativi al 2017
-        JavaRDD<String> temperature2k = temperature.filter(line -> (line.contains("2016-") || line.contains("2017-"))
-                && (line.contains("12:00") || line.contains("13:00") || line.contains("14:00") || line.contains("15:00")));
+                    String year =  TimeDateManager.getYear(tempValues[0]);
+                    String month = TimeDateManager.getMonth(tempValues[0]);
+                    String day = TimeDateManager.getDay(tempValues[0]);
+                    int hour = Integer.parseInt(TimeDateManager.getHour(tempValues[0]));
 
-        //creo coppie chiave-valore con chiave = "datetime città periodo" e valore = temperatura di una certa ora
-        JavaPairRDD<String, Double> coppia2 = temperature2k.flatMapToPair(line -> {
-            ArrayList<Tuple2<String, Double>> result = new ArrayList<>();
-            String key;
-            String period;
-            Double dailyTemperature;
+                    int offset = city_countries.get(cities[i]).getTimezone_offset();
 
-            String[] word = line.split(",");
-            String date = word[0].substring(0, 10);
+                    String[] new_date = TimeDateManager.getTimeZoneDate(offset,hour,year+"_"+month+"_"+day).split("_");
 
-            if (date.contains("-06-") || date.contains("-07-") || date.contains("-08-") || date.contains("-09-"))
-                period = "period_1";
-            else
-                period = "period_2";
+                    String new_year =  new_date[0];
+                    String new_month = new_date[1];
+                    String new_day = new_date[2];
 
+                    String new_hour = TimeDateManager.getTimeZoneTime(hour,offset)+"";
 
-            int i;
-            for (i = 1; i < word.length; ++i) {
-                //key = date + " " + cities.get(i - 1) + " " + period;
-                key = date + " " + period + " " + cities.get(i - 1) + " " + countries.get(i-1);
-                dailyTemperature = Double.valueOf(word[i]);
-                result.add(new Tuple2<>(key, dailyTemperature));
-            }
-            return result.iterator();
-        });
-/*
-        List<Tuple2<String, Double>> listaGiornaliera = coppia2.collect();
-        printer.stampaListaGiornaliera(listaGiornaliera);
-        //exit(0);
- */
+                    String city = city_countries.get(cities[i]).getName();
+                    String country = city_countries.get(cities[i]).getCountry();
 
-        //calcolo la temperatura nella fascia oraria
-        JavaPairRDD<String, Double> dailyTemp = coppia2.reduceByKey((x, y) -> x + y);
+                    MeasureSQLQuery3 m = new MeasureSQLQuery3(city,new_year,new_month,new_day,new_hour,country,Double.parseDouble(tempValues[i]));
 
-        JavaPairRDD<String, Double> dailyAvgTemp = dailyTemp.flatMapToPair(line -> {
+                    String quarter;
+                    if(m.getMonth().equals("01") || m.getMonth().equals("02") || m.getMonth().equals("03") || m.getMonth().equals("04")){
+                        quarter="First";
+                    }else{
+                        quarter="Second";
+                    }
+                    String key = country+"_"+city+"_"+quarter;
 
-            ArrayList<Tuple2<String, Double>> result = new ArrayList<>();
-
-            //è la temperatura media giornaliera nella fascia oraria
-            Double dailyAvgTempValue = line._2 / 4.0;
-
-            //la chiave non ha il giorno. L'obiettivo è calcolare la temperatura media mensile
-            String key = line._1.substring(0, 7) + line._1.substring(10);
-
-            result.add(new Tuple2<>(key, dailyAvgTempValue));
-            return result.iterator();
-        });
-        /*
-        List<Tuple2<String, Double>> lista = dailyAvgTemp.collect();
-        printer.stampaListaMensile(lista);
-        //exit(0);
-         */
-
-        JavaPairRDD<String, Double> montlyTemp = dailyAvgTemp.reduceByKey((x, y) -> x+y);
-
-        JavaPairRDD<String, Double> montlyAvgTemp = montlyTemp.flatMapToPair(line -> {
-
-            ArrayList<Tuple2<String, Double>> result = new ArrayList<>();
-
-            Integer montlyDay;
-            if(line._1.contains("-02"))
-                montlyDay = 28;
-            else if(line._1.contains("-04") || line._1.contains("-06") || line._1.contains("-09") || line._1.contains("-11"))
-                montlyDay = 30;
-            else
-                montlyDay = 31;
-            Double montlyAvgTempValue = line._2 / montlyDay;
-
-            String key = line._1.substring(0, 4) + line._1.substring(7);
-
-            result.add(new Tuple2<>(key, montlyAvgTempValue));
-            return result.iterator();
-        });
-        /*
-        List<Tuple2<String, Double>> lista2 = montlyAvgTemp.collect();
-        printer.stampaListaAnnuale(lista2);
-        //exit(0);
-         */
-
-        JavaPairRDD<String, Double> yearlyTemp = montlyAvgTemp.reduceByKey((x, y) -> x+y);
-
-        JavaPairRDD<String, Double> yearlyAvgTemp = yearlyTemp.flatMapToPair(line -> {
-            ArrayList<Tuple2<String, Double>> result = new ArrayList<>();
-
-            //String key = line._1.substring(0, line._1.length()-9);
-            String key = line._1.substring(0,4) + " " + line._1.substring(14);
-            /*calcolo il valore annuale medio della temperatura. L'idea è di avere valori positivi relativi al 2017 e
-            negativi per il 2016
-             */
-
-            Double yearlyAvgTempValue = line._2 / 12.0;
-            if(line._1.contains("period_1") && line._2.doubleValue()<0)
-                yearlyAvgTempValue = -yearlyAvgTempValue;
-            if(line._1.contains("period_2") && line._2.doubleValue()>0)
-                yearlyAvgTempValue = -yearlyAvgTempValue;
-
-            result.add(new Tuple2<>(key, yearlyAvgTempValue));
-            return result.iterator();
-        });
-        /*
-        List<Tuple2<String, Double>> listaAnno = yearlyAvgTemp.collect();
-        printer.stampaListaAnnuale(listaAnno);
-        //exit(0);
-         */
-
-        JavaPairRDD<String, Double> tempDifference = yearlyAvgTemp.reduceByKey((x, y) -> x+y);
-        JavaPairRDD<Double, String> reverseRdd = tempDifference.flatMapToPair(line -> {
-            ArrayList<Tuple2<Double, String>> result = new ArrayList<>();
-
-            String key = line._1;
-            Double value = line._2;
-            if(value<0)
-                value = -value;
-
-            result.add(new Tuple2<>(value, key));
-            return result.iterator();
-        }).sortByKey(false);
-        /*
-        List<Tuple2<Double, String>> list9 = reverseRdd.collect();
-        printer.stampaRisultato(list9);
-        //exit(0);
-         */
-
-        ArrayList<String> distinctCountries = findDistinctCountries(countries);
-        System.out.println(distinctCountries);
-
-        int i;
-        for(i=0; i<distinctCountries.size(); ++i)
-            findRanking(reverseRdd, distinctCountries.get(i));
- /*
-        //salvataggio in HDFS     caso 1: locale    caso 2: container
-        //classifica2k17.saveAsTextFile("hdfs://localhost:9000/sabd/output");
-        //classifica2k17.saveAsTextFile("hdfs://localhost:54310/simone/sabd/output_query3");
-
-        //result.show();
-  */
-
-        /*
-        Writer writer = new Writer();
-        writer.writeString(distinctCountries);
-         */
-        //writer.writeRdd(reverseRdd);
-
-        //new MainQuerySQL3().eseguiQuerySQL3(tempDifference, sc, countries);
-        sc.close();
-    }
-
-    /**
-     * Cerca le singole nazioni presenti nella lista di città
-     * @param countries
-     * @return
-     */
-    static public ArrayList<String> findDistinctCountries(ArrayList<String> countries){
-        ArrayList<String> result = new ArrayList<>();
-
-        int i;
-        for(i=0; i<countries.size(); ++i){
-            if(!result.contains(countries.get(i)))
-                result.add(countries.get(i));
-        }
-        return result;
-    }
-
-    /**
-     * Dato un rdd che ha per chiave la differenza di temperatura tra due quadrimestri del 2017 e 2016, filtra per
-     * ottenere un rdd per ogni anno.
-     * Infine viene chiamata la funzione "stampaClassifiche()" per stampare i primi tre paesi nella classifica del
-     * 2017 e le rispettive posizioni in quella del 2016.
-     * @param reverseRdd
-     * @param city
-     */
-    static public void findRanking(JavaPairRDD<Double, String> reverseRdd, String city){
-
-        Printer printer = new Printer();
-
-        reverseRdd = reverseRdd.filter(line -> line._2.contains(city));
-
-        JavaPairRDD<Double, String> classifica2k17 = reverseRdd.filter(pair -> pair._2.contains("2017"));
-        List<Tuple2<Double, String>> listTop2k17 = classifica2k17.collect();
-        printer.stampaRisultato(listTop2k17);
-
-        JavaPairRDD<Double, String> classifica2k16 = reverseRdd.filter(pair -> pair._2.contains("2016"));
-        List<Tuple2<Double, String>> listTop2k16 = classifica2k16.collect();
-        printer.stampaRisultato(listTop2k16);
-
-        stampaClassifiche(classifica2k17, classifica2k16);
-    }
-
-    /**
-     * La funzione stampa i primi tre paesi nella classifica del 2017, quindi li cerca nella classifica del 2016
-     * per stamparne le rispettive posizioni.
-     * @param classifica2k17
-     * @param classifica2k16
-     */
-    static public void stampaClassifiche(JavaPairRDD<Double, String> classifica2k17, JavaPairRDD<Double, String> classifica2k16){
-
-        List<Tuple2<Double, String>> top2k17 = classifica2k17.take(3);
-        System.out.println("classifica 2017:");
-        System.out.println("1^ posizione: " + top2k17.get(0)._2.substring(4));
-        System.out.println("2^ posizione: " + top2k17.get(1)._2.substring(4));
-        System.out.println("3^ posizione: " + top2k17.get(2)._2.substring(4));
-
-        List<Tuple2<Double, String>> top2k16 = classifica2k16.collect();
-        int i, j, k;
-        boolean trovato;
-        System.out.println("rispettive posizioni nella classifica 2016:");
-
-        for(i=0; i<top2k17.size(); ++i){
-            trovato = false;
-            for(j=0; j<top2k16.size() && !trovato; ++j){
-                if(top2k16.get(j)._2.contains(top2k17.get(i)._2.substring(4))) {
-                    k = j + 1;
-                    System.out.println(k + "^ posizione: " + top2k16.get(j)._2.substring(4));
-                    trovato = true;
+                    results.add(new Tuple2<>(key,m));
                 }
+
+                return results.iterator();
+            }
+        });
+
+        //filter out data by month and year
+
+        JavaPairRDD<String,MeasureSQLQuery3> dataFilteredByMonth = pairsKeyMeasure.filter(x -> x._2.getMonth().equals("01") || x._2.getMonth().equals("02") ||
+                x._2.getMonth().equals("03") || x._2.getMonth().equals("04") || x._2.getMonth().equals("06") ||
+                x._2.getMonth().equals("07") || x._2.getMonth().equals("08") || x._2.getMonth().equals("09"));
+
+        JavaPairRDD<String,MeasureSQLQuery3> dataFilteredByHour = dataFilteredByMonth.filter(x -> x._2.getHour().equals("12") ||x._2.getHour().equals("13") ||
+                x._2.getHour().equals("14") || x._2.getHour().equals("15"));
+
+        JavaPairRDD<String,MeasureSQLQuery3> data2k17 = dataFilteredByHour.filter(x -> x._2.getYear().equals("2017"));
+        JavaPairRDD<String,MeasureSQLQuery3> data2k16 = dataFilteredByHour.filter(x -> x._2.getYear().equals("2016"));
+
+        //output: country_city_quarter, [measures..]
+        JavaPairRDD<String,Iterable<MeasureSQLQuery3>> rdd1k17ByCityQuarter = data2k17.groupByKey();
+        JavaPairRDD<String,Iterable<MeasureSQLQuery3>> rdd1k16ByCityQuarter = data2k16.groupByKey();
+
+        //output: country_city_quarter, mean)
+        JavaPairRDD<String,Iterable<Double>> rdd2k17Mean = rdd1k17ByCityQuarter.mapToPair(new getQuarterMean()).groupByKey();
+        JavaPairRDD<String,Iterable<Double>> rdd2k16Mean = rdd1k16ByCityQuarter.mapToPair(new getQuarterMean()).groupByKey();
+
+        //output: country, [city + diff] array
+        JavaPairRDD<String, Iterable<CityDiff>> rdd2k17Diff = rdd2k17Mean.mapToPair(new meansToDiff()).groupByKey();
+        JavaPairRDD<String, Iterable<CityDiff>> rdd2k16Diff = rdd2k16Mean.mapToPair(new meansToDiff()).groupByKey();
+
+        Map<String,Iterable<CityDiff>> map2k17 = rdd2k17Diff.collectAsMap();
+        Map<String,Iterable<CityDiff>> map2k16 = rdd2k16Diff.collectAsMap();
+
+        for(String k : map2k17.keySet()){
+
+            List<Tuple2<String, Integer>> res = getResultByNation(map2k17.get(k), map2k16.get(k));
+            System.out.println(res);
+
+        }
+
+    }
+
+    private static List<Tuple2<String, Integer>> getResultByNation(Iterable<CityDiff> list2017, Iterable<CityDiff> list2016) {
+
+        List<String> citiesRank2017 = getCityRank(list2017);
+        List<String> citiesRank2016 = getCityRank(list2016);
+
+        List<Tuple2<String, Integer>> result = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+
+            String name = citiesRank2017.get(i);
+            Integer index = citiesRank2016.indexOf(name);
+
+            result.add(new Tuple2<>(name, index+1));
+
+
+        }
+
+        return result;
+
+    }
+
+    private static List<String> getCityRank(Iterable<CityDiff> list2017) {
+
+        List<CityDiff> list = new ArrayList<>();
+        for(CityDiff cd : list2017){
+
+            list.add(cd);
+
+        }
+
+        List<String> ranking = new ArrayList<>();
+        int dimen = list.size();
+
+        for (int i = 0; i < dimen; i++) {
+
+            CityDiff max = getMaxFromList(list);
+            list.remove(max);
+            ranking.add(max.getCity());
+        }
+
+        return ranking;
+
+    }
+
+    private static CityDiff getMaxFromList(List<CityDiff> list) {
+
+        Double value=0.0;
+        CityDiff maxCity = null;
+        for(CityDiff cd : list){
+            if(cd.getDiff()> value){
+                value=cd.getDiff();
+                maxCity=cd;
             }
         }
+        return maxCity;
     }
+
+
+    private static Double getMean(List<Double> valuesList) {
+
+        double m = 0.0;
+        for(Double d : valuesList){
+            m += d;
+        }
+        return m/size(valuesList);
+    }
+
+    private static class meansToDiff implements PairFunction<Tuple2<String, Iterable<Double>>, String, CityDiff> {
+        @Override
+        public Tuple2<String, CityDiff> call(Tuple2<String, Iterable<Double>> stringIterableTuple2) throws Exception {
+            List<Double> list = new ArrayList<>();
+            for(Double d : stringIterableTuple2._2){
+                list.add(d);
+            }
+            Double diff = Math.abs(list.get(0)- list.get(1));
+            String[] key = stringIterableTuple2._1.split("_");
+            String new_key = key[0];
+            CityDiff cd = new CityDiff(key[1],key[0],diff);
+
+            return new Tuple2<>(new_key,cd);
+        }
+    }
+
+    private static class getQuarterMean implements PairFunction<Tuple2<String, Iterable<MeasureSQLQuery3>>, String, Double> {
+        @Override
+        public Tuple2<String, Double> call(Tuple2<String, Iterable<MeasureSQLQuery3>> stringIterableTuple2) throws Exception {
+
+            Iterable<MeasureSQLQuery3> measures = stringIterableTuple2._2;
+            List<Double> valuesList = new ArrayList<>();
+
+            for(MeasureSQLQuery3 m : measures){
+                valuesList.add(m.getValue());
+            }
+
+            Double mean = getMean(valuesList);
+
+            String[] old_key = stringIterableTuple2._1.split("_");
+            //key country + city
+            String new_key = old_key[0]+"_"+old_key[1];
+
+            return new Tuple2<>(new_key,mean);
+        }
+    }
+
 }

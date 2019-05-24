@@ -1,4 +1,4 @@
-package sparkSQL;
+package entities;
 
 import java.io.Serializable;
 

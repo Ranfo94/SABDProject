@@ -1,6 +1,7 @@
 package sparkSQL;
 
 import entities.City;
+import entities.MeasureSQL;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 public class QuerySQL2 {
 
-    public static void process(List<JavaPairRDD<String,MeasureSQL>> list, HashMap<String, City> city_countries){
+    public static void process(List<JavaPairRDD<String, MeasureSQL>> list, HashMap<String, City> city_countries){
 
         SparkSession spark = SparkSession
                 .builder()

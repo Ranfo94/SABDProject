@@ -1,27 +1,26 @@
-package sparkSQL;
+package entities;
 
 import java.io.Serializable;
 
-public class WeatherDescriptionSQL implements Serializable {
+public class MeasureSQLQuery3 implements Serializable {
 
     private String city;
-    private String country;
-    private String description;
     private String year;
     private String month;
     private String day;
-    private int hour;
+    private String hour;
+    private String country;
+    private Double value;
 
-    public WeatherDescriptionSQL(String city, String country, String description, String year, String month, String day, int hour) {
+    public MeasureSQLQuery3(String city, String year, String month, String day, String hour, String country, Double value) {
         this.city = city;
-        this.country = country;
-        this.description = description;
         this.year = year;
         this.month = month;
         this.day = day;
         this.hour = hour;
+        this.country = country;
+        this.value = value;
     }
-
 
     public String getCity() {
         return city;
@@ -29,22 +28,6 @@ public class WeatherDescriptionSQL implements Serializable {
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getYear() {
@@ -71,11 +54,27 @@ public class WeatherDescriptionSQL implements Serializable {
         this.day = day;
     }
 
-    public int getHour() {
+    public String getHour() {
         return hour;
     }
 
-    public void setHour(int hour) {
+    public void setHour(String hour) {
         this.hour = hour;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Double getValue() {
+        return value;
+    }
+
+    public void setValue(Double value) {
+        this.value = value;
     }
 }

@@ -20,11 +20,14 @@ import java.util.*;
 import static avro.shaded.com.google.common.collect.Iterables.getLast;
 import static avro.shaded.com.google.common.collect.Iterables.size;
 
-public class Query2 {
+/**
+ * Query 2:
+ * per ogni nazione, la media, la deviazione standard,
+ * il minimo, il massimo della temperatura, della pressione e
+ * dell’umidita` registrata in ogni mese di ogni anno.
+ */
 
- //   private static String pathToPressureFile = "dataset/pressure.csv";
-//    private static String pathToHumidityFile = "dataset/humidity.csv";
-//    private static String pathToTemperatureFile = "dataset/temperature.csv";
+public class Query2 {
 
     public static String pathToPressureFile = "cleaned_dataset/cleaned_pressure.csv";
     public static String pathToHumidityFile = "cleaned_dataset/cleaned_humidity.csv";
@@ -91,7 +94,7 @@ public class Query2 {
                     String new_month = new_date[1];
                     String new_day = new_date[2];
 
-                   String new_hour = TimeDateManager.getTimeZoneTime(hour,offset)+"";
+                    String new_hour = TimeDateManager.getTimeZoneTime(hour,offset)+"";
 
                     //key: country_year_month_day
                     String key = city_countries.get(cities[j]).getCountry()+"_"+ new_date[0] +"_"+ new_date[1] +"_"+new_date[2];
@@ -217,17 +220,18 @@ public class Query2 {
         Map<String,Iterable<YearlyStats>> yearlyPressureStatsByCountry = monthlyPressureStatsByCountry.mapToPair(new computeYearlyStats()).groupByKey().collectAsMap();
         Map<String,Iterable<YearlyStats>> yearlyTemperatureStatsByCountry = monthlyTemperatureStatsByCountry.mapToPair(new computeYearlyStats()).groupByKey().collectAsMap();
 
+
+        long endTime = System.nanoTime();
+
         /**
          * funzione che aggrega i dati in classe Country Stats
          */
         List<CountryStats> finalResult = collectDataByCountry(yearlyHumidityStatsByCountry,yearlyPressureStatsByCountry,yearlyTemperatureStatsByCountry);
 
-
         sc.stop();
 
         System.out.println("\n****\n");
 
-        long endTime = System.nanoTime();
         long timeElapsed = endTime - startTime;
 
         System.out.println("Time Elapsed (nanoseconds) : " + timeElapsed);
@@ -344,4 +348,5 @@ public class Query2 {
             return new Tuple2<>(new_key,yStats);
         }
     }
+
 }

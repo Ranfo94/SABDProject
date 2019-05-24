@@ -1,13 +1,13 @@
 package sparkSQL;
 
 import entities.City;
+import entities.MeasureSQL;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,10 +36,20 @@ public class MainQuerySQL2 {
                 .getOrCreate();
 
 
+        long startTime = System.nanoTime();
+
         HashMap<String, City> city_countries = Query2PreProcessing.getCountriesList(sc);
-        List<JavaPairRDD<String,MeasureSQL>> rddList = Query2PreProcessing.preprocessData(sc,city_countries);
+        List<JavaPairRDD<String, MeasureSQL>> rddList = Query2PreProcessing.preprocessData(sc,city_countries);
 
         QuerySQL2.process(rddList,city_countries);
+
+        System.out.println("\n****\n");
+
+        long endTime = System.nanoTime();
+        long timeElapsed = endTime - startTime;
+
+        System.out.println("Time Elapsed (nanoseconds) : "+timeElapsed);
+        System.out.println("Time Elapsed (milliseconds) : "+timeElapsed/1000000);
 
         spark.close();
         sc.close();

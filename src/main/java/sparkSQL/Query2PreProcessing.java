@@ -1,6 +1,7 @@
 package sparkSQL;
 
 import entities.City;
+import entities.MeasureSQL;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -31,7 +32,7 @@ public class Query2PreProcessing {
         return city_countries;
     }
 
-    public static List<JavaPairRDD<String,MeasureSQL>> preprocessData(JavaSparkContext sc, HashMap<String,City>city_countries) throws IOException {
+    public static List<JavaPairRDD<String, MeasureSQL>> preprocessData(JavaSparkContext sc, HashMap<String,City>city_countries) throws IOException {
 
         JavaRDD<String> temperatureFile = sc.textFile(pathToTemperatureFile);
         JavaRDD<String> humidityFile = sc.textFile(pathToHumidityFile);
