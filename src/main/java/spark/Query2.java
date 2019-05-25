@@ -48,17 +48,21 @@ public class Query2 {
 
         long startTime = System.nanoTime();
 
-        //TODO : GET FILES FROM HDFS
-
-        JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        //JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        JavaRDD<String> rawData = sc.textFile("hdfs://localhost:54310/simone/sabd/CityFile.csv");
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
 
         //get humidity data
-        JavaRDD<String> humidityRawData = sc.textFile(pathToHumidityFile);
+        JavaRDD<String> humidityRawData = sc.textFile("hdfs://localhost:54310/simone/sabd/Humidity.csv");
+        //JavaRDD<String> humidityRawData = sc.textFile(pathToHumidityFile);
+
         //get pressure data
-        JavaRDD<String> pressureRawData = sc.textFile(pathToPressureFile);
+        JavaRDD<String> pressureRawData = sc.textFile("hdfs://localhost:54310/simone/sabd/Pressure.csv");
+        //JavaRDD<String> pressureRawData = sc.textFile(pathToPressureFile);
+
         //get temperature data
-        JavaRDD<String> temperatureRawData = sc.textFile(pathToTemperatureFile);
+        JavaRDD<String> temperatureRawData = sc.textFile("hdfs://localhost:54310/simone/sabd/Temperature.csv");
+        //JavaRDD<String> temperatureRawData = sc.textFile(pathToTemperatureFile);
 
         //cities
         String firstRow = humidityRawData.first();

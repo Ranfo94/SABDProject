@@ -20,11 +20,11 @@ public class Query1PreProcessing {
 
     public static JavaPairRDD<String, WeatherDescriptionSQL> preprocessData(JavaSparkContext sc) throws IOException {
 
-        JavaRDD<String> descriptionFile = sc.textFile(pathToDescriptionFile);
+        //JavaRDD<String> descriptionFile = sc.textFile(pathToDescriptionFile);
+        JavaRDD<String> descriptionFile = sc.textFile("hdfs://localhost:54310/simone/sabd/Description.csv");
 
-        //TODO: GET FILE FROM HDFS
-
-        JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
+        //JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
+        JavaRDD<String> cityFile = sc.textFile("hdfs://localhost:54310/simone/sabd/City.csv");
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(cityFile);
 
         String firstRow = descriptionFile.first();

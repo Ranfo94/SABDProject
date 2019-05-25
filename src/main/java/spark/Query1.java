@@ -33,9 +33,8 @@ public class Query1 {
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("ERROR");
 
-        //TODO: GET FILE FROM HDFS
-
-        JavaRDD<String> file = sc.textFile(pathToFile);
+        //JavaRDD<String> file = sc.textFile(pathToFile);
+        JavaRDD<String> file = sc.textFile("hdfs://localhost:54310/simone/sabd/Weather.csv");
 
         long startTime = System.nanoTime();
 

@@ -15,6 +15,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import producer.Producer;
 import scala.Tuple2;
 import utils_project.Geolocalizer;
 import utils_project.TimeDateManager;
@@ -40,13 +41,13 @@ public class ProvaMainQuerySQL3 {
 
         long startTime = System.nanoTime();
 
-        //TODO GET FILE FROM HDFS
-
-        JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        //JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        JavaRDD<String> rawData = sc.textFile("hdfs://localhost:54310/simone/sabd/City.csv");
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
 
         //get temp data
-        JavaRDD<String> tempRawData = sc.textFile(pathToTempFile);
+        //JavaRDD<String> tempRawData = sc.textFile(pathToTempFile);
+        JavaRDD<String> tempRawData = sc.textFile("hdfs://localhost:54310/simone/sabd/Temperature.csv");
 
         //cities
         String firstRow = tempRawData.first();
@@ -208,7 +209,9 @@ public class ProvaMainQuerySQL3 {
         String queryJoinIsrael= "SELECT israelthree2k17.country, israelthree2k17.row AS row_2017, israelthree2k17.city, israel2k16.row AS row_2016 FROM israelthree2k17 LEFT JOIN israel2k16 ON israelthree2k17.city=israel2k16.city";
         Dataset<Row> israel = spark.sql(queryJoinIsrael);
 
-        //TODO:SAVE SU HDFS usa E israel
+        Producer producer = new Producer();
+        producer.runProducer(usa, "result");
+        producer.runProducer(israel, "result");
 
         long endTime = System.nanoTime();
 

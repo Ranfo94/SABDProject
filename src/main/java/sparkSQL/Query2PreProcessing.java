@@ -27,7 +27,8 @@ public class Query2PreProcessing {
 
     public static HashMap<String, City> getCountriesList(JavaSparkContext sc) throws IOException {
 
-        JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
+        //JavaRDD<String> cityFile = sc.textFile(pathToCityFile);
+        JavaRDD<String> cityFile = sc.textFile("hdfs://localhost:54310/simone/sabd/City.csv");
         HashMap<String, City> city_countries = process_city_location(cityFile);
         return city_countries;
     }
@@ -36,9 +37,14 @@ public class Query2PreProcessing {
 
         //TODO: GET FILE FROM HDFS
 
-        JavaRDD<String> temperatureFile = sc.textFile(pathToTemperatureFile);
-        JavaRDD<String> humidityFile = sc.textFile(pathToHumidityFile);
-        JavaRDD<String> pressureFile = sc.textFile(pathToPressureFile);
+        //JavaRDD<String> temperatureFile = sc.textFile(pathToTemperatureFile);
+        JavaRDD<String> temperatureFile = sc.textFile("hdfs://localhost:54310/simone/sabd/Temperature.csv");
+
+        //JavaRDD<String> humidityFile = sc.textFile(pathToHumidityFile);
+        JavaRDD<String> humidityFile = sc.textFile("hdfs://localhost:54310/simone/sabd/Humidity.csv");
+
+        //JavaRDD<String> pressureFile = sc.textFile(pathToPressureFile);
+        JavaRDD<String> pressureFile = sc.textFile("hdfs://localhost:54310/simone/sabd/Pressure.csv");
 
         String firstRow = temperatureFile.first();
         String[] splittedRow = firstRow.split(",");

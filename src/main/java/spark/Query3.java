@@ -34,13 +34,13 @@ public class Query3 {
 
         long startTime = System.nanoTime();
 
-        //TODO: GET FILE FROM HDFS
-
-        JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        //JavaRDD<String> rawData = sc.textFile(pathToCityFile);
+        JavaRDD<String> rawData = sc.textFile("hdfs://localhost:54310/simone/sabd/City.csv");
         HashMap<String, City> city_countries = Geolocalizer.process_city_location(rawData);
 
         //get temp data
-        JavaRDD<String> tempRawData = sc.textFile(pathToTempFile);
+        //JavaRDD<String> tempRawData = sc.textFile(pathToTempFile);
+        JavaRDD<String> tempRawData = sc.textFile("hdfs://localhost:54310/simone/sabd/Temperature.csv");
 
         //cities
         String firstRow = tempRawData.first();

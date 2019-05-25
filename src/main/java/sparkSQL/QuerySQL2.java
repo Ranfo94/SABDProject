@@ -12,6 +12,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import producer.Producer;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -54,8 +55,8 @@ public class QuerySQL2 {
         System.out.println("TEMPERATURE\n");
         sortedTempRes.show();
 
-        //TODO: INVIA RISULTATO SU HDFS. FILE: sortedTempRes
-
+        Producer producer = new Producer();
+        producer.runProducer(sortedTempRes, "result");
 
         /**
          * HUMIDITY
@@ -74,7 +75,8 @@ public class QuerySQL2 {
         System.out.println("HUMIDITY\n");
         sortedHumRes.show();
 
-        //TODO: INVIA RISULTATO SU HDFS. FILE: sortedHumRes
+        producer.runProducer(sortedHumRes, "result");
+
 
         /**
          * PRESSURE
@@ -93,8 +95,7 @@ public class QuerySQL2 {
         System.out.println("PRESSURE\n");
         sortedPressRes.show();
 
-        //TODO: INVIA RISULTATO SU HDFS. FILE: SORTEDPRESSRESS
-
+        producer.runProducer(sortedPressRes, "result");
     }
 
     /**
